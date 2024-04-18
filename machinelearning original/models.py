@@ -302,10 +302,8 @@ class Helpers():
         
     def get_gradients(self, loss, weight_result=False):
         if weight_result:
-            gradients = nn.gradients(loss, [self.model.W1, self.model.b1, self.model.W2, self.model.b2, self.model.result])
-        else:
-            gradients = nn.gradients(loss, [self.model.W1, self.model.b1, self.model.W2, self.model.b2])
-        return gradients
+            return  nn.gradients(loss, [self.model.W1, self.model.b1, self.model.W2, self.model.b2, self.model.result])
+        return nn.gradients(loss, [self.model.W1, self.model.b1, self.model.W2, self.model.b2])
         
     def update_weights(self, x, label, weight_result=False):
         loss = self.model.get_loss(x, label)
