@@ -35,9 +35,8 @@ class PerceptronModel(Module):
         Hint: You can use ones(dim) to create a tensor of dimension dim.
         """
         super(PerceptronModel, self).__init__()
-        
         "*** YOUR CODE HERE ***"
-        self.w = None #Initialize your weights here
+        self.w = Parameter(ones(1, dimensions))
 
     def get_weights(self):
         """
@@ -56,6 +55,7 @@ class PerceptronModel(Module):
         The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
+        return tensordot(x, self.w)
 
 
     def get_prediction(self, x):
@@ -65,7 +65,8 @@ class PerceptronModel(Module):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
-
+        val = self.run(x)
+        return 1 if val >= 0 else -1
 
 
     def train(self, dataset):
@@ -80,21 +81,31 @@ class PerceptronModel(Module):
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
-
+        while True:
+            bool_update = False
+            for d in dataloader:
+                x, label = d['x'], d['label']
+                prediction = self.get_prediction(x)
+                if prediction != label:
+                    self.w = Parameter(self.w + tensor(x) * tensor(label))
+                    bool_update = True
+            if not bool_update:
+                break
 
 
 class RegressionModel(Module):
-    """
+    """""
     A neural network model for approximating a function that maps from real
     numbers to real numbers. The network should be sufficiently large to be able
     to approximate sin(x) on the interval [-2pi, 2pi] to reasonable precision.
+    
     """
     def __init__(self):
-        # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         super().__init__()
-
-
+        self.hidden_size = 200
+        self.batch_size = 48
+        self.learning_rate = 0.2
 
     def forward(self, x):
         """
@@ -106,7 +117,11 @@ class RegressionModel(Module):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
-
+        x = Linear(x, self.W1)
+        x = x + self.b1
+        x = relu(x)
+        x = Linear(x, self.W2)
+        return x + self.b2
     
     def get_loss(self, x, y):
         """
@@ -119,9 +134,10 @@ class RegressionModel(Module):
         Returns: a tensor of size 1 containing the loss
         """
         "*** YOUR CODE HERE ***"
+        y_pred = self.forward(x)
+        loss = mse_loss(y_pred, y)
+        return loss
  
-  
-
     def train(self, dataset):
         """
         Trains the model.
@@ -137,14 +153,17 @@ class RegressionModel(Module):
             
         """
         "*** YOUR CODE HERE ***"
-
-
-            
-
-
-
-
-
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        optimizer = optim.SGD(self.parameters(), lr=self.learning_rate)
+        num_epochs = 500
+        for epoch in range(num_epochs):
+            for batch in dataloader:
+                x, y_true = batch['x'], batch['label']            
+                y_pred = self.forward(x)            
+                loss = self.get_loss(y_pred, y_true)            
+                optimizer.zero_grad()            
+                loss.backward()            
+                optimizer.step()
 
 
 class DigitClassificationModel(Module):
